@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Live Video Insights & Interactive Questioning</title>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            padding: 20px;
+            background-color: #121212; /* Dark background */
+            font-family: Arial, sans-serif;
+            color: #fff;
+            flex-direction: column;  /* Stack content vertically */
+            gap: 30px;  /* Space between containers */
+        }
+        #form-container, #result-container {
+            width: 100%;
+            max-width: 700px;  /* Limit max width to ensure uniformity */
+            background-color: #1f1f1f;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.7);
+            box-sizing: border-box;  /* Ensure padding is included in width calculation */
+        }
+        #form-container h1, #result-container h2 {
+            color: #ffcc00;  /* Yellow for title */
+            font-size: 24px;
+            text-align: center;
+        }
+        label {
+            font-size: 16px;
+            color: #ffcc00;
+            display: block;
+            margin-bottom: 8px;
+        }
+        input, select {
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 20px;
+            background-color: #333;
+            color: #fff;
+            border: 1px solid #ffcc00;
+            border-radius: 5px;
+            font-size: 16px;
+            box-sizing: border-box;  /* Prevent overflow by including padding in the width calculation */
+        }
+        /* Reduce size of the select dropdown */
+        select {
+            width: auto;  /* Make it auto to prevent stretching */
+            padding: 10px;
+            height: 40px;
+            margin-bottom: 10px; /* Reduce margin */
+        }
+        button {
+            width: 100%;
+            padding: 10px;  /* Reduced padding */
+            height: 40px;  /* Fixed button height */
+            background-color: #ffcc00;
+            color: #121212;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            margin-bottom: 20px;  /* Add some spacing between buttons */
+        }
+        button:hover {
+            background-color: #ffd700;
+        }
+        #result {
+            margin-top: 20px;
+            background-color: #333;
+            padding: 15px;
+            border-radius: 8px;
+            color: #fff;
+        }
+        #annotated-image {
+            max-width: 100%;
+            margin-top: 20px;
+            display: none;
+            border: 2px solid #ffcc00;
+        }
+
+        /* Mobile Responsiveness */
+        @media (max-width: 768px) {
+            body {
+                gap: 20px;  /* Adjust gap between containers on mobile */
+                padding: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="form-container">
+        <h1>🎥 Live Video Insights & Interactive Questioning</h1>
+        <form method="POST" id="processing-form">
+            <label for="video_url">🔗 Enter YouTube Video URL:</label>
+            <input type="text" id="video_url" name="video_url" placeholder="Paste the YouTube URL here" required>
+            
+            <label for="action">⚙️ Choose an Action:</label>
+            <select id="action" name="action" required>
+                <option value="qna"> Video Questioning</option>
+                <option value="capture">Capture Video Insights</option>
+            </select>
+
+            <div id="question-container" style="display: none;">
+                <label for="question">✍️ Enter Your Question:</label>
+                <input type="text" id="question" name="question" placeholder="Enter your question here">
+            </div>
+
+            <button type="submit"> Submit</button>
+        </form>
+    </div>
+
+    <div id="result-container">
+        <h2>💡 Answer:</h2>
+        <div id="result"></div>
+        <img id="annotated-image" style="display:none;" alt="Annotated Image">
+    </div>
+
+    <script>
+        const form = document.getElementById("processing-form");
+        const actionSelect = document.getElementById("action");
+        const questionContainer = document.getElementById("question-container");
+        const resultDiv = document.getElementById("result");
+        const annotatedImage = document.getElementById("annotated-image");
+
+        actionSelect.addEventListener("change", () => {
+            if (actionSelect.value === "qna") {
+                questionContainer.style.display = "block";
+            } else {
+                questionContainer.style.display = "none";
+            }
+        });
+
+        form.addEventListener("submit", async (e) => {
+            e.preventDefault();
+            const formData = new FormData(form);
+            const response = await fetch("/", { method: "POST", body: formData });
+            const result = await response.json();
+
+            // Handle image from capture function
+            if (result.image) {
+                annotatedImage.src = `data:image/png;base64,${result.image}`;
+                annotatedImage.style.display = "block";
+            } else {
+                annotatedImage.style.display = "none";
+            }
+
+            // Handle scene description stats
+            if (result["Scene description stats"]) {
+                resultDiv.textContent = JSON.stringify(result["Scene description stats"], null, 2);
+            } else if (result.Answer) {
+                resultDiv.textContent = `Answer: ${result.Answer}`;
+            } else {
+                resultDiv.textContent = JSON.stringify(result, null, 2);
+            }
+        });
+    </script>
+</body>
+</html>
