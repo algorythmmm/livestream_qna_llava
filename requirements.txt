@@ -1,0 +1,11 @@
+pyngrok
+ultralytics
+flask 
+yt-dlp   
+transformers 
+opencv-python 
+pillow
+bitsandbytes
+accelerate
+flash-attn
+lap
